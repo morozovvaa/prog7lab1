@@ -12,14 +12,15 @@
 
 #### Настройка окружения:
 Создал виртуальное окружение для изоляции зависимостей проекта.
-
+```
 python -m venv .venv
 .venv\Scripts\activate
 pip install django
 python -m django --version
-
+```
 
 #### Структура проекта:
+```
 Django/
     .venv/              # Виртуальное окружение
     mysite/             # Главный пакет проекта
@@ -38,7 +39,7 @@ Django/
         tests.py        # Тесты
         migrations/     # Миграции БД
     manage.py           # Утилита управления проектом
-
+```
 
 ---
 
@@ -58,6 +59,7 @@ Django/
 Модели - это Python классы, описывающие структуру БД. 
 
 # polls/models.py
+```
 import datetime
 from django.db import models
 from django.utils import timezone
@@ -80,6 +82,7 @@ class Choice(models.Model):
     
     def __str__(self):
         return self.choice_text
+```
 
 #### Типы полей:
 - `CharField(max_length=200)` → VARCHAR(200) в БД
@@ -113,8 +116,10 @@ python manage.py migrate
 
 
 #### Django ORM - работа через Shell:
+```
 python manage.py shell
-
+```
+```
 from polls.models import Question, Choice
 from django.utils import timezone
 
@@ -148,30 +153,26 @@ q.choice_set.count()
 # Обратная связь
 c = Choice.objects.get(pk=1)
 c.question  # Получить связанный Question
-
-#### Django ORM - магия:
-- Не пишу SQL вручную - Django генерирует его сам
-- Автоматическая защита от SQL-инъекций
-- Работаю с объектами Python, а не строками SQL
-- Lookup-фильтры: `__startswith`, `__contains`, `__lte`, `__gte`, `__year`
-- Lazy evaluation - запрос выполняется только при обращении к данным
+```
 
 #### Создание суперпользователя:
+```
 python manage.py createsuperuser
 Username: admin
 Email: admin@example.com
 Password: ********
+```
 
 #### Админ-панель Django:
 # polls/admin.py
+```
 from django.contrib import admin
 from .models import Question
 
 admin.site.register(Question)
-
+```
 
 #### Метод __str__():
-Обязательно добавляю в модели для читаемости:
 
 def __str__(self):
     return self.question_text
@@ -192,18 +193,21 @@ def __str__(self):
 ### Комментарии:
 
 #### Структура шаблонов:
+```
 polls/
     templates/
         polls/              
             index.html
             detail.html
             results.html
+```
 
 **Почему вложенная папка polls?**
 Django ищет шаблоны в `templates/` всех приложений. Если два приложения имеют `index.html`, возникнет конфликт. Поэтому: `polls/templates/polls/index.html`
 
 #### Представления (views) - функциональные:
 # polls/views.py
+```
 from django.shortcuts import render, get_object_or_404
 from .models import Question
 
@@ -220,8 +224,9 @@ def results(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
     return render(request, "polls/results.html", {"question": question})
 
-
+```
 #### Шаблоны Django:
+```
 <!-- polls/templates/polls/index.html -->
 {% if latest_question_list %}
     <ul>
@@ -232,7 +237,7 @@ def results(request, question_id):
 {% else %}
     <p>No polls are available.</p>
 {% endif %}
-
+```
 #### Теги шаблонов:
 - `{{ variable }}` - вывод переменной
 - `{% for %}...{% endfor %}` - цикл
@@ -242,6 +247,7 @@ def results(request, question_id):
 
 #### URL с параметрами:
 # polls/urls.py
+```
 from django.urls import path
 from . import views
 
@@ -255,7 +261,7 @@ urlpatterns = [
 ]
 
 `<int:question_id>` - захватывает число из URL и передает в view как параметр
-
+```
 #### Пространство имен (app_name):
 - Без него: `{% url 'detail' %}`
 - С ним: `{% url 'polls:detail' %}`
@@ -264,6 +270,7 @@ urlpatterns = [
 #### Generic Views - меньше кода:
 
 # polls/views.py
+```
 from django.views import generic
 
 class IndexView(generic.ListView):
@@ -289,7 +296,7 @@ urlpatterns = [
     path("<int:pk>/results/", views.ResultsView.as_view(), name="results"),
     path("<int:question_id>/vote/", views.vote, name="vote"),
 ]
-
+```
 **Изменилось:** `question_id` → `pk` для generic views
 
 ---
@@ -307,6 +314,7 @@ urlpatterns = [
 
 #### Форма голосования в шаблоне:
 <!-- polls/templates/polls/detail.html -->
+```
 <form action="{% url 'polls:vote' question.id %}" method="post">
 {% csrf_token %}
 <fieldset>
@@ -349,7 +357,7 @@ def vote(request, question_id):
         # POST/Redirect/GET паттерн
         return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
 
-
+```
 
 **3. POST/Redirect/GET паттерн:**
 - POST запрос → обработка данных
@@ -366,6 +374,7 @@ return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
 
 #### Шаблон результатов:
 <!-- polls/templates/polls/results.html -->
+```
 <h1>{{ question.question_text }}</h1>
 
 <ul>
@@ -377,7 +386,7 @@ return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
 <a href="{% url 'polls:detail' question.id %}">Vote again?</a>
 
 `|pluralize` - автоматически добавляет "s" для множественного числа
-
+```
 ---
 
 ## Часть 5: Автоматизированное тестирование
@@ -392,6 +401,7 @@ return HttpResponseRedirect(reverse("polls:results", args=(question.id,)))
 ### Комментарии:
 
 #### Обнаруженная ошибка:
+```
 python manage.py shell
 
 from django.utils import timezone
@@ -401,9 +411,11 @@ from polls.models import Question
 future_question = Question(pub_date=timezone.now() + datetime.timedelta(days=30))
 future_question.was_published_recently()
 # True - это неправильно! Будущее != недавнее
+```
 
 #### Первый тест для модели:
 # polls/tests.py
+```
 import datetime
 from django.test import TestCase
 from django.utils import timezone
@@ -418,27 +430,18 @@ class QuestionModelTests(TestCase):
         time = timezone.now() + datetime.timedelta(days=30)
         future_question = Question(pub_date=time)
         self.assertIs(future_question.was_published_recently(), False)
-
-#### Запуск тестов:
-python manage.py test polls
-
-Creating test database for alias 'default'...
-F
-======================================================================
-FAIL: test_was_published_recently_with_future_question
-----------------------------------------------------------------------
-AssertionError: True is not False
-======================================================================
-Ran 1 test in 0.001s
-FAILED (failures=1)
+```
 
 #### Исправление ошибки:
 # polls/models.py
+```
 def was_published_recently(self):
     now = timezone.now()
     return now - datetime.timedelta(days=1) <= self.pub_date <= now
+```
 
 #### Дополнительные тесты:
+```
 def test_was_published_recently_with_old_question(self):
     """
     Для вопросов старше 1 дня должно быть False
@@ -454,86 +457,8 @@ def test_was_published_recently_with_recent_question(self):
     time = timezone.now() - datetime.timedelta(hours=23, minutes=59, seconds=59)
     recent_question = Question(pub_date=time)
     self.assertIs(recent_question.was_published_recently(), True)
+```
 
-Теперь все 3 теста проходят
-
-#### Проблема с IndexView:
-Вопросы с pub_date в будущем отображаются в списке - это неправильно!
-
-#### Исправление IndexView:
-# polls/views.py
-from django.utils import timezone
-
-class IndexView(generic.ListView):
-    template_name = "polls/index.html"
-    context_object_name = "latest_question_list"
-
-    def get_queryset(self):
-        """
-        Возвращает последние 5 опубликованных вопросов 
-        (без тех, что будут опубликованы в будущем)
-        """
-        return Question.objects.filter(
-            pub_date__lte=timezone.now()  # lte = less than or equal
-        ).order_by("-pub_date")[:5]
-
-`pub_date__lte=timezone.now()` - важный фильтр! Показываем только прошлые вопросы.
-
-#### Вспомогательная функция для тестов:
-def create_question(question_text, days):
-    """
-    Создает вопрос с заданным текстом и датой публикации
-    days > 0: будущее
-    days < 0: прошлое
-    days = 0: сейчас
-    """
-    time = timezone.now() + datetime.timedelta(days=days)
-    return Question.objects.create(question_text=question_text, pub_date=time)
-
-#### Тесты для IndexView:
-class QuestionIndexViewTests(TestCase):
-    def test_no_questions(self):
-        """Если нет вопросов, показываем сообщение"""
-        response = self.client.get(reverse("polls:index"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "No polls are available.")
-        self.assertQuerySetEqual(response.context["latest_question_list"], [])
-
-    def test_past_question(self):
-        """Прошлые вопросы отображаются"""
-        question = create_question(question_text="Past question.", days=-30)
-        response = self.client.get(reverse("polls:index"))
-        self.assertQuerySetEqual(
-            response.context["latest_question_list"],
-            [question],
-        )
-
-    def test_future_question(self):
-        """Будущие вопросы НЕ отображаются"""
-        create_question(question_text="Future question.", days=30)
-        response = self.client.get(reverse("polls:index"))
-        self.assertContains(response, "No polls are available.")
-        self.assertQuerySetEqual(response.context["latest_question_list"], [])
-
-    def test_future_question_and_past_question(self):
-        """Только прошлые отображаются, даже если есть будущие"""
-        question = create_question(question_text="Past question.", days=-30)
-        create_question(question_text="Future question.", days=30)
-        response = self.client.get(reverse("polls:index"))
-        self.assertQuerySetEqual(
-            response.context["latest_question_list"],
-            [question],
-        )
-
-    def test_two_past_questions(self):
-        """Отображается несколько вопросов"""
-        question1 = create_question(question_text="Past question 1.", days=-30)
-        question2 = create_question(question_text="Past question 2.", days=-5)
-        response = self.client.get(reverse("polls:index"))
-        self.assertQuerySetEqual(
-            response.context["latest_question_list"],
-            [question2, question1],  # Сортировка по дате (новые первые)
-        )
 
 #### Django Test Client:
 self.client.get(url)  # Имитирует GET запрос
@@ -550,6 +475,7 @@ self.assertContains(response, text)  # text есть в HTML
 self.assertQuerySetEqual(qs1, qs2)  # QuerySet равны
 
 #### Исправление DetailView:
+```
 class DetailView(generic.DetailView):
     model = Question
     template_name = "polls/detail.html"
@@ -577,7 +503,7 @@ class QuestionDetailViewTests(TestCase):
         url = reverse("polls:detail", args=(past_question.id,))
         response = self.client.get(url)
         self.assertContains(response, past_question.question_text)
-
+```
 ---
 
 
@@ -592,7 +518,7 @@ class QuestionDetailViewTests(TestCase):
 ### Комментарии:
 
 #### Структура статических файлов:
-
+```
 polls/
     static/
         polls/              
@@ -600,13 +526,14 @@ polls/
             images/
                 background.png
 
-
+```
 
 #### Создание CSS файла:
 
 #### Подключение статики в шаблоне:
 
 <!-- polls/templates/polls/index.html -->
+```
 {% load static %}
 
 <!DOCTYPE html>
@@ -631,7 +558,7 @@ polls/
     {% endif %}
 </body>
 </html>
-
+```
 #### Ключевые моменты:
 
 1. {% load static %} - загружает шаблонный тег static
@@ -669,16 +596,6 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 2. другое_приложение/static/polls/style.css
 3. Папки из STATICFILES_DIRS (если настроены)
 
-#### Сбор статики для production:
-
-python manage.py collectstatic
-
-Эта команда:
-- Соберет всю статику из всех приложений
-- Скопирует в папку STATIC_ROOT
-- Используется перед деплоем
-
-
 
 ---
 
@@ -697,8 +614,6 @@ python manage.py collectstatic
 
 #### Базовая настройка admin:
 
-# polls/admin.py
-
 Что изменилось:
 - По умолчанию: question_text, pub_date
 - После настройки: pub_date, question_text
@@ -706,7 +621,7 @@ python manage.py collectstatic
 Сначала дата, потом текст - более логично при создании опроса.
 
 #### Группировка полей (fieldsets):
-
+```
 class QuestionAdmin(admin.ModelAdmin):
     fieldsets = [
         (None, {"fields": ["question_text"]}),  # Секция без заголовка
@@ -715,7 +630,7 @@ class QuestionAdmin(admin.ModelAdmin):
             "classes": ["collapse"]  # Свернутая секция
         }),
     ]
-
+```
 Структура fieldsets:
 - Кортеж: (Заголовок, {настройки})
 - None - секция без заголовка
@@ -723,13 +638,8 @@ class QuestionAdmin(admin.ModelAdmin):
 - "classes": ["wide"] - широкая секция
 - "classes": ["collapse", "wide"] - можно комбинировать
 
-Что понял:
-- fieldsets улучшает UX для больших форм
-- Логическая группировка полей
-- Визуальное разделение секций
-
 #### Inline редактирование Choice:
-
+```
 class ChoiceInline(admin.TabularInline):
     model = Choice
     extra = 3  # 3 пустые формы для новых вариантов
@@ -756,9 +666,9 @@ admin.site.register(Question, QuestionAdmin)
 - max_num = 10 - максимум вариантов
 - min_num = 2 - минимум вариантов
 - can_delete = True - можно удалять (по умолчанию)
-
+```
 #### Настройка списка вопросов:
-
+```
 class QuestionAdmin(admin.ModelAdmin):
     # ... fieldsets и inlines ...
     
@@ -771,7 +681,7 @@ class QuestionAdmin(admin.ModelAdmin):
     list_filter = ["pub_date"]  # Фильтр по дате
     
     search_fields = ["question_text"]  # Поиск по тексту
-
+```
 list_display - столбцы в таблице:
 - Список полей для отображения
 - Можно использовать методы модели
@@ -796,6 +706,7 @@ search_fields - поле поиска вверху:
 Шаг 1: Настройка TEMPLATES в settings.py
 
 # mysite/settings.py
+```
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -811,19 +722,15 @@ TEMPLATES = [
         },
     },
 ]
-
+```
 Что сделано:
-- Добавил "DIRS": [BASE_DIR / "templates"]
+- Добавлено "DIRS": [BASE_DIR / "templates"]
 - Теперь Django будет искать шаблоны в корневой папке templates/
 - Приоритет: сначала templates/, потом app/templates/
 
 Шаг 2: Создание структуры папок
 
-В корне проекта (там где manage.py):
-
-mkdir templates
-mkdir templates\admin
-
+```
 Структура:
 
 Django/
@@ -833,31 +740,12 @@ Django/
     mysite/
     polls/
     manage.py
-
+```
 Шаг 3: Найти исходный шаблон Django
-
+```
 python -c "import django; print(django.__path__)"
-
+```
 Шаг 4: Создать templates/admin/base_site.html
-
-{% extends "admin/base.html" %}
-
-{% block title %}
-{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}
-{% endblock %}
-
-{% block branding %}
-<div id="site-name">
-    <a href="{% url 'admin:index' %}">
-        Polls Administration
-    </a>
-</div>
-{% if user.is_anonymous %}
-  {% include "admin/color_theme_toggle.html" %}
-{% endif %}
-{% endblock %}
-
-{% block nav-global %}{% endblock %}
 
 - Было: <h1 id="site-name"><a href="{% url 'admin:index' %}">Django administration</a></h1>
 - Стало: <div id="site-name"><a href="{% url 'admin:index' %}">Polls Administration</a></div>
@@ -878,5 +766,3 @@ python -c "import django; print(django.__path__)"
 
 
 ---
-
-## Часть 6:
